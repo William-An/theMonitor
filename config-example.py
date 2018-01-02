@@ -1,0 +1,11 @@
+LED_PIN = 2
+IN_PIN = 3
+OUT_PIN = 4
+SSID = 'XXX'
+passwd = 'XXX'
+MQTT_ID = 'XXX'
+MQTT_SERVER = 'FOO.bar'
+MQTT_PORT = 23023
+MQTT_USER = 'Admin'
+MQTT_PASSWD = 'password'
+MQTT_SSL = True
