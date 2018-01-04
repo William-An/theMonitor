@@ -18,10 +18,11 @@ class counter(object):
 			self.second = pin
 		self.first.irq(trigger=machine.Pin.IRQ_FALLING, handler=self.callback)
 	def callback(self,inp):
+		self.second.irq(trigger=machine.Pin.IRQ_FALLING, handler=None)
 		print('First: ',self.first)
 		print('Second: ',self.second)
 		print(self.__class__.count)
-		init_state = self.second.value()
+		init_state = 1
 		start = time.ticks_ms()
 		while time.ticks_diff(time.ticks_ms(),start) < 5000:
 			if self.second.value() != init_state:
@@ -32,9 +33,10 @@ class counter(object):
 				print(self.__class__.count)
 				mqclient.publish('libary',str(self.__class__.count))
 				print('Uploaded')
-				while self.second.value()!=init_state:
+				while self.second.value() != init_state or self.first.value() != init_state:
 					pass
-				break
+				self.second.irq(trigger=machine.Pin.IRQ_FALLING, handler=self.callback)
+				return
 
 # Handle SZZX WIFI
 def szzx_connection():
@@ -43,6 +45,7 @@ def szzx_connection():
 		data=config.SZZX_TEACHER_DATA,\
 		headers=config.SZZX_TEACHER_HEADER)
 	print('Connected')
+	# Ping test
 	res.close()
 
 # Led pin
@@ -53,14 +56,16 @@ led = machine.Pin(config.LED_PIN, machine.Pin.OUT)
 sta_if = network.WLAN(network.STA_IF)
 sta_if.active(True)
 led.off()
+start = time.ticks_ms()
 sta_if.connect(config.SSID, config.passwd)
 while not sta_if.isconnected():
-	pass
-if config.SSID
+	if time.ticks_diff(time.ticks_ms(),start) > 100000:
+		print('Fail to connect to ',config.SSID)
+		break
 led.on()
 
 # Connect to SMS WIFI
-szzx_connection()
+# szzx_connection()
 
 # Connect to server
 global mqclient
@@ -72,8 +77,9 @@ res = mqclient.connect()
 start = time.ticks_ms()
 while res is not 0:
 	res = mqclient.connect()
-	if (time.ticks_ms() - start) < 10000:
-		exit()
+	if time.ticks_diff(time.ticks_ms(),start) > 100000:
+		print('Fail to connect to MQTT Broker at ',config.MQTT_SERVER)
+		break
 led.on()
 
 # Initializing pins
